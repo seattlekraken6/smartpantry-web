@@ -150,12 +150,12 @@ function openAccountCreationModal() {
   document.body.classList.add('pantry-pal-modal-required');
   openModal('Create your Pantry Pal account', `
     <div class="account-creation-form">
-      <p style="font-family:Outfit; margin-bottom:12px; color:#dbeafe;">Please create a Pantry Pal account to continue. This account powers onboarding, your pantry snapshot, and smart scan features.</p>
+      <p class="account-creation-copy">Please create a Pantry Pal account to continue. This account powers onboarding, your pantry snapshot, and smart scan features.</p>
       <label for="pantry-pal-name">Full name</label>
-      <input id="pantry-pal-name" type="text" placeholder="Jane Doe" />
+      <input id="pantry-pal-name" class="receipt-upload" type="text" placeholder="Jane Doe" />
       <label for="pantry-pal-email">Email address</label>
-      <input id="pantry-pal-email" type="email" placeholder="jane@pantrypal.com" />
-      <div id="account-error" style="color:#f8b4b4; margin-top:10px; font-size:0.92rem;"></div>
+      <input id="pantry-pal-email" class="receipt-upload" type="email" placeholder="jane@pantrypal.com" />
+      <div id="account-error" class="ocr-result" style="margin-top:10px; font-size:0.92rem;"></div>
       <div class="modal-actions" style="margin-top:16px;">
         <button id="create-account" class="scanner-action-btn" type="button">Create account</button>
       </div>
@@ -278,9 +278,9 @@ window.closeModal = function() {
 
 function openBarcodeScannerModal() {
   openModal('Barcode Scanner', `
-    <p style="font-family:Outfit;margin-bottom:16px;">Point your camera at a barcode to add an item automatically.</p>
-    <div id="reader" style="width:100%; min-height:320px; border-radius:18px; overflow:hidden; background:#000"></div>
-    <div id="barcode-status" style="font-family:Outfit; margin-top:14px; color:#dbeafe;">Looking for a barcode...</div>
+    <p class="account-creation-copy">Point your camera at a barcode to add an item automatically.</p>
+    <div id="reader" class="scanner-box"></div>
+    <div id="barcode-status" class="scanner-status">Looking for a barcode...</div>
   `);
   if (!window.Html5Qrcode) {
     const script = document.createElement('script');
@@ -341,9 +341,9 @@ function onBarcodeScanned(decodedText) {
 
 function openCameraCaptureModal() {
   openModal('Camera Preview', `
-    <p style="font-family:Outfit;margin-bottom:16px;">Your camera is active. Use this to preview an item or add a quick pantry note.</p>
-    <video id="capture-video" autoplay playsinline muted style="width:100%; border-radius:18px; background:#000"></video>
-    <div id="capture-status" style="font-family:Outfit; margin-top:12px; color:#dbeafe;">Waiting for camera permission...</div>
+    <p class="account-creation-copy">Your camera is active. Use this to preview an item or add a quick pantry note.</p>
+    <video id="capture-video" autoplay playsinline muted class="scanner-box"></video>
+    <div id="capture-status" class="scanner-status">Waiting for camera permission...</div>
     <div class="modal-actions" style="margin-top:18px;">
       <button class="scanner-action-btn" id="capture-add-item" type="button">Add sample item</button>
       <button class="scanner-action-btn secondary" id="capture-close" type="button">Close preview</button>
@@ -381,9 +381,9 @@ function startCameraPreview() {
 
 function openReceiptScannerModal() {
   openModal('Receipt Scanner', `
-    <p style="font-family:Outfit;margin-bottom:16px;">Upload a receipt to extract purchase details and add items.</p>
-    <input type="file" id="receipt-upload" accept="image/*" style="width:100%; padding:12px; border-radius:12px; border:1px solid #CBD5E1; margin-bottom:14px; font-family:Outfit;">
-    <div id="ocr-result" style="font-family:Outfit; background:#111827; padding:14px; border-radius:18px; min-height:90px; color:#e2e8f0;">Waiting for receipt upload…</div>
+    <p class="account-creation-copy">Upload a receipt to extract purchase details and add items.</p>
+    <input type="file" id="receipt-upload" accept="image/*" class="receipt-upload" />
+    <div id="ocr-result" class="receipt-preview">Waiting for receipt upload…</div>
   `);
   const upload = document.getElementById('receipt-upload');
   if (!upload) return;
@@ -450,8 +450,8 @@ function setupOnboardingBanner() {
         Your account is ready with a <strong>${profile.theme}</strong> theme.
       </div>
       <div class="onboarding-banner-actions">
-        <button id="start-onboarding">Start setup</button>
-        <button id="dismiss-onboarding">Maybe later</button>
+        <button id="start-onboarding" class="primary">Start setup</button>
+        <button id="dismiss-onboarding" class="secondary">Maybe later</button>
       </div>
     </div>
   `;
