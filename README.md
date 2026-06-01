@@ -1,8 +1,8 @@
-# SmartPantry — AI Kitchen Manager
+# Pantry Pal — AI Kitchen Companion
 
 > *"Design. Stock. Eat. Automatically."*
 
-A fully-featured AI-powered smart pantry and fridge web app.
+A fully-featured AI-powered pantry manager and meal planning web app.
 
 ## Features
 
@@ -60,7 +60,7 @@ The app will be available at `http://localhost:4000` (or your chosen port).
 For production, use a process manager like PM2:
 ```bash
 npm install -g pm2
-pm2 start serve-web.js --name smartpantry
+pm2 start serve-web.js --name pantry-pal
 pm2 save
 pm2 startup
 ```
@@ -77,8 +77,8 @@ CMD ["node", "serve-web.js"]
 ```
 
 ```bash
-docker build -t smartpantry .
-docker run -p 4000:4000 smartpantry
+docker build -t pantry-pal .
+docker run -p 4000:4000 pantry-pal
 ```
 
 ---
@@ -86,7 +86,7 @@ docker run -p 4000:4000 smartpantry
 ## File Structure
 
 ```
-smartpantry-deploy/
+pantry-pal-deploy/
 ├── dist/               ← Built web app (all HTML, JS, CSS, assets)
 │   ├── index.html      ← Main entry point
 │   ├── _expo/          ← Expo web bundles

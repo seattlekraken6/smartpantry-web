@@ -27,5 +27,5 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`SmartPantry web app running on port ${PORT}`);
+  console.log(`Pantry Pal web app running on port ${PORT}`);
 });
