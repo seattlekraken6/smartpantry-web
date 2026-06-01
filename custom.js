@@ -36,8 +36,8 @@ function injectAnalytics() {
           datasets: [{
             label: 'Monthly Grocery Spending ($)',
             data: [350, 420, 380, 410, 290],
-            borderColor: '#2D9B6F',
-            backgroundColor: 'rgba(45, 155, 111, 0.2)',
+            borderColor: '#3B82F6',
+            backgroundColor: 'rgba(59, 130, 246, 0.2)',
             fill: true,
             tension: 0.4
           }]
@@ -168,4 +168,40 @@ document.addEventListener('DOMContentLoaded', () => {
   injectAnalytics();
   setupBarcodeScanner();
   setupReceiptScanner();
+});
+
+// Setup Navigation
+function setupNavigation() {
+  document.addEventListener('click', (e) => {
+    // Traverse up to find a clickable container
+    let target = e.target.closest('.r-1loqt21') || e.target.closest('[tabindex="0"]');
+    if (!target) return;
+    
+    const text = target.innerText || '';
+    
+    // Ignore scanner buttons since they are handled separately
+    if (text.includes('Add Item') || text.includes('Camera Detection') || text.includes('Receipt OCR') || text.includes('Receipt Scanner')) return;
+
+    if (text.includes('🏠')) {
+      window.location.href = 'index.html';
+    } else if (text.includes('🛒') && !text.includes('Order Now')) {
+      window.location.href = 'grocery.html';
+    } else if (text.includes('🍽️')) {
+      window.location.href = 'meals.html';
+    } else if (text.includes('🧊') || text.includes('3D Designer')) {
+      window.location.href = 'designer.html';
+    } else if (text.includes('🌐') || text.includes('Community')) {
+      window.location.href = 'community.html';
+    } else if (text.includes('⚙️')) {
+      window.location.href = 'settings.html';
+    } else if (text.includes('👤') || target.querySelector('.user-avatar')) {
+      window.location.href = 'profile.html';
+    } else if (text.includes('＋') || text === '＋') {
+      window.location.href = 'smart-capture.html';
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setupNavigation();
 });

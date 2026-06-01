@@ -1,11 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary-gradient: linear-gradient(135deg, #2D9B6F 0%, #166544 100%);
+  --primary-gradient: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
   --accent-gradient: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
   --glass-bg: rgba(255, 255, 255, 0.85);
   --glass-border: rgba(255, 255, 255, 0.3);
-  --shadow-soft: 0 8px 32px rgba(45, 155, 111, 0.1);
+  --shadow-soft: 0 8px 32px rgba(59, 130, 246, 0.1);
 }
 
 body {
@@ -31,13 +31,13 @@ div[dir="auto"] {
 
 .css-g5y9jx[style*="background-color:rgba(255,255,255,1.00)"]:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(45, 155, 111, 0.15) !important;
+  box-shadow: 0 12px 40px rgba(59, 130, 246, 0.15) !important;
 }
 
 /* Buttons with Gradients */
 .css-g5y9jx[style*="background-color:rgba(45,155,111,1.00)"] {
   background: var(--primary-gradient) !important;
-  box-shadow: 0 4px 15px rgba(45, 155, 111, 0.3) !important;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
   border: none !important;
   transition: transform 0.2s ease;
 }
