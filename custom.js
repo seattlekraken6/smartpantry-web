@@ -99,51 +99,67 @@ function applyThemeStyles(profile) {
 
 function openAccountOnboardingModal() {
   const profile = ensureUserProfile();
-  const initials = getProfileInitials(profile.name);
   document.body.classList.add('pantry-pal-modal-required');
+  let step = 0;
+  const slides = [
+    {
+      number: '01',
+      title: `Welcome, ${profile.name.split(' ')[0]}`,
+      copy: 'Keep your kitchen organized with one calm, simple workspace.',
+      detail: 'Track what you have, what is running low, and what to cook next.'
+    },
+    {
+      number: '02',
+      title: 'Add items your way',
+      copy: 'Use a barcode, a receipt, or the add-item action whenever groceries come in.',
+      detail: 'Your pantry stays current without a long setup process.'
+    },
+    {
+      number: '03',
+      title: 'Plan with less effort',
+      copy: 'Turn your pantry into a grocery list or a weekly meal plan in a few taps.',
+      detail: 'Everything remains editable as your week changes.'
+    }
+  ];
 
-  openModal('Pantry Pal Onboarding', `
-    <div class="account-summary-card">
-      <div class="account-avatar account-avatar-lg" style="background:${profile.accent};">${initials}</div>
-      <div class="account-summary-copy">
-        <strong>${profile.name}</strong>
-        <p>Your Pantry Pal account is ready. Finish onboarding to unlock smart grocery scanning, pantry snapshots, and personalized kitchen recommendations.</p>
-      </div>
-    </div>
-    <div class="onboarding-steps">
-      <div class="step">✅ Account created</div>
-      <div class="step">🎨 Theme selected</div>
-      <div class="step">🚀 Onboarding complete</div>
-    </div>
-    <div class="modal-actions">
-      <button id="complete-onboarding" class="scanner-action-btn" type="button">Finish setup</button>
-      <button id="randomize-theme" class="scanner-action-btn secondary" type="button">Choose a new theme</button>
-    </div>
-  `);
+  const render = () => {
+    const slide = slides[step];
+    openModal('Getting started', `
+      <section class="onboarding-screen">
+        <div class="onboarding-screen-brand">Pantry Pal</div>
+        <div class="onboarding-screen-number">${slide.number}</div>
+        <h3>${slide.title}</h3>
+        <p>${slide.copy}</p>
+        <div class="onboarding-screen-detail">${slide.detail}</div>
+        <div class="onboarding-screen-footer">
+          <div class="onboarding-screen-dots" aria-label="Onboarding progress">
+            ${slides.map((_, index) => `<span class="${index === step ? 'active' : ''}"></span>`).join('')}
+          </div>
+          <div class="modal-actions">
+            ${step > 0 ? '<button id="onboarding-back" class="scanner-action-btn secondary" type="button">Back</button>' : ''}
+            <button id="onboarding-next" class="scanner-action-btn" type="button">${step === slides.length - 1 ? 'Start using Pantry Pal' : 'Continue'}</button>
+          </div>
+        </div>
+      </section>
+    `);
 
-  const completeBtn = document.getElementById('complete-onboarding');
-  const randomizeBtn = document.getElementById('randomize-theme');
-  if (completeBtn) {
-    completeBtn.addEventListener('click', () => {
+    document.getElementById('onboarding-back')?.addEventListener('click', () => {
+      step -= 1;
+      render();
+    });
+    document.getElementById('onboarding-next')?.addEventListener('click', () => {
+      if (step < slides.length - 1) {
+        step += 1;
+        render();
+        return;
+      }
       localStorage.setItem('pantryPalOnboardingSeen', 'true');
       document.body.classList.remove('pantry-pal-modal-required');
       closeModal();
     });
-  }
-  if (randomizeBtn) {
-    randomizeBtn.addEventListener('click', () => {
-      const current = ensureUserProfile();
-      let next = randomTheme();
-      while (next.name === current.theme) {
-        next = randomTheme();
-      }
-      const profile = { ...current, theme: next.name, accent: next.accent, gradient: next.gradient };
-      localStorage.setItem('pantryPalProfile', JSON.stringify(profile));
-      applyThemeStyles(profile);
-      injectAvatars();
-      openAccountOnboardingModal();
-    });
-  }
+  };
+
+  render();
 }
 
 function openAccountCreationModal() {
@@ -185,12 +201,11 @@ function openAccountCreationModal() {
 }
 
 function startApp() {
+  document.body.classList.add('pantry-pal-ready');
   injectAvatars();
   injectAnalytics();
   applyBrandingReplacements();
-  createFloatingScannerPanel();
-  createTopMenuButton();
-  createPantrySnapshotPanel();
+  wireExportedHamburgerMenu();
   document.addEventListener('click', handleGlobalActions, true);
 }
 
@@ -403,6 +418,32 @@ function openReceiptScannerModal() {
   });
 }
 
+function openImageUploadModal() {
+  openModal('Add a pantry photo', `
+    <p class="account-creation-copy">Choose a kitchen or grocery photo. Pantry Pal will add a review-ready item from the image.</p>
+    <input type="file" id="image-upload" accept="image/*" class="receipt-upload" />
+    <div id="image-upload-result" class="receipt-preview">Waiting for an image...</div>
+  `);
+  const upload = document.getElementById('image-upload');
+  if (!upload) return;
+  upload.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const result = document.getElementById('image-upload-result');
+    if (!result) return;
+    result.innerHTML = `
+      <strong>${file.name}</strong>
+      <p class="account-creation-copy">Image ready. Add a review item now and rename it from your inventory.</p>
+      <button id="image-add-item" class="scanner-action-btn" type="button">Add review item</button>
+    `;
+    document.getElementById('image-add-item')?.addEventListener('click', () => {
+      addInventoryItem({ name: 'Photo review item', quantity: 1, unit: 'pcs', category: 'photo' });
+      closeModal();
+      openModal('Photo added', '<p class="account-creation-copy">Your review item was added to inventory.</p>');
+    });
+  });
+}
+
 function runOCR(file, isReceipt = false) {
   Tesseract.recognize(file, 'eng', { logger: () => {} })
     .then(({ data: { text } }) => {
@@ -609,13 +650,16 @@ function openPantryModal() {
   if (receiptBtn) receiptBtn.addEventListener('click', openReceiptScannerModal);
 }
 
-function createTopMenuButton() {
-  if (document.getElementById('pantry-pal-top-menu')) return;
-  const menu = document.createElement('div');
-  menu.id = 'pantry-pal-top-menu';
-  menu.innerHTML = `<button id="open-menu-btn" class="scanner-action-btn secondary" type="button">☰ Menu</button>`;
-  document.body.appendChild(menu);
-  document.getElementById('open-menu-btn').addEventListener('click', openMenuModal);
+function wireExportedHamburgerMenu() {
+  const candidates = document.querySelectorAll('[tabindex="0"]');
+  candidates.forEach(candidate => {
+    if (candidate.innerText.trim()) return;
+    const lines = candidate.querySelectorAll(':scope > div');
+    if (lines.length !== 3) return;
+    candidate.setAttribute('role', 'button');
+    candidate.setAttribute('aria-label', 'Open menu');
+    candidate.dataset.pantryPalAction = 'menu';
+  });
 }
 
 function openMenuModal() {
@@ -670,6 +714,13 @@ function createFloatingScannerPanel() {
 function handleGlobalActions(event) {
   const target = event.target.closest('button, a, [role="button"], [tabindex="0"], .r-1loqt21');
   if (!target) return;
+  if (target.closest('#global-modal')) return;
+  if (target.dataset.pantryPalAction === 'menu') {
+    event.preventDefault();
+    event.stopPropagation();
+    openMenuModal();
+    return;
+  }
   const text = ((target.innerText || target.getAttribute('aria-label') || '') || '').trim();
   if (!text) return;
 
@@ -732,6 +783,34 @@ function handleGlobalActions(event) {
     event.preventDefault();
     event.stopPropagation();
     window.location.href = 'settings.html';
+    return;
+  }
+
+  if (/\b(order history|past orders)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.href = 'grocery/orders.html';
+    return;
+  }
+
+  if (/\b(checkout|review order|continue to checkout)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.href = 'grocery/checkout.html';
+    return;
+  }
+
+  if (/\b(confirm order)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    openModal('Order confirmed', '<p class="account-creation-copy">Your grocery order has been confirmed.</p>');
+    return;
+  }
+
+  if (/^(‹|back)$/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    window.history.back();
     return;
   }
 

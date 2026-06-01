@@ -4,7 +4,9 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.WEB_PORT || 4000;
-const DIST = path.join(__dirname, 'dist');
+const DIST = fs.existsSync(path.join(__dirname, 'dist'))
+  ? path.join(__dirname, 'dist')
+  : __dirname;
 
 // Serve static assets
 app.use(express.static(DIST));
