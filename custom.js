@@ -89,9 +89,12 @@ function ensureUserProfile() {
 function applyThemeStyles(profile) {
   document.documentElement.style.setProperty('--primary-gradient', profile.gradient);
   document.documentElement.style.setProperty('--avatar-bg', profile.accent);
-  document.documentElement.style.setProperty('--glass-bg', 'rgba(15, 23, 42, 0.16)');
-  document.documentElement.style.setProperty('--glass-border', 'rgba(255, 255, 255, 0.18)');
-  document.documentElement.style.setProperty('--shadow-soft', '0 24px 60px rgba(15, 23, 42, 0.16)');
+  document.documentElement.style.setProperty('--accent', profile.accent);
+  document.documentElement.style.setProperty('--accent-light', profile.gradient ? profile.gradient.split(' ')[0] : '#D9A85C');
+  document.documentElement.style.setProperty('--accent-glow', profile.accent + '33');
+  document.documentElement.style.setProperty('--glass-bg', 'rgba(20, 17, 12, 0.92)');
+  document.documentElement.style.setProperty('--glass-border', 'rgba(255, 255, 255, 0.08)');
+  document.documentElement.style.setProperty('--shadow-soft', '0 22px 70px rgba(0, 0, 0, 0.35)');
 }
 
 function openAccountOnboardingModal() {
