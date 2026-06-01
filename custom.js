@@ -726,14 +726,24 @@ function handleGlobalActions(event) {
 
   const action = text.toLowerCase();
 
-  if (/\b(add item|➕|＋|scan barcode|scan receipt|receipt scanner)\b/i.test(text)) {
+  if (/\b(scan barcode)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    if (/receipt/i.test(text)) {
-      openReceiptScannerModal();
-    } else {
-      openBarcodeScannerModal();
-    }
+    openBarcodeScannerModal();
+    return;
+  }
+
+  if (/\b(scan receipt|receipt scanner)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    openReceiptScannerModal();
+    return;
+  }
+
+  if (/\b(add item|➕|＋)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.href = 'item/add.html';
     return;
   }
 
@@ -772,6 +782,13 @@ function handleGlobalActions(event) {
     return;
   }
 
+  if (/\b(inventory history|activity log)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.href = 'inventory-history.html';
+    return;
+  }
+
   if (/\b(inventory|pantry|stock|warehouse)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
@@ -783,6 +800,48 @@ function handleGlobalActions(event) {
     event.preventDefault();
     event.stopPropagation();
     window.location.href = 'settings.html';
+    return;
+  }
+
+  if (/\b(forecast|forecasting)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.href = 'forecasting.html';
+    return;
+  }
+
+  if (/\b(smart cart|shopping list)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.href = 'smart-cart.html';
+    return;
+  }
+
+  if (/\b(community)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.href = 'community.html';
+    return;
+  }
+
+  if (/\b(subscription|upgrade|premium)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.href = 'subscription.html';
+    return;
+  }
+
+  if (/\b(privacy)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.href = 'privacy.html';
+    return;
+  }
+
+  if (/\b(add recipe|create recipe)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    window.location.href = 'recipe/add.html';
     return;
   }
 
