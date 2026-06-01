@@ -1,6 +1,7 @@
 // Inject Avatars
 function injectAvatars() {
-  const profile = ensureUserProfile();
+  const profile = getUserProfile();
+  if (!profile) return;
   applyThemeStyles(profile);
   const initials = getProfileInitials(profile.name);
   const avatarHtml = `
@@ -40,16 +41,35 @@ function randomTheme() {
   return themes[Math.floor(Math.random() * themes.length)];
 }
 
-function ensureUserProfile() {
-  let profile = null;
+function getUserProfile() {
   const stored = localStorage.getItem('pantryPalProfile');
-  if (stored) {
-    try {
-      profile = JSON.parse(stored);
-    } catch (e) {
-      profile = null;
-    }
+  if (!stored) return null;
+  try {
+    return JSON.parse(stored);
+  } catch (e) {
+    return null;
   }
+}
+
+function createUserProfile({ name, email }) {
+  const theme = randomTheme();
+  const profile = {
+    id: `pp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    name: name ? name.trim() : `Pantry Pal ${theme.name}`,
+    email: email ? email.trim() : '',
+    theme: theme.name,
+    accent: theme.accent,
+    gradient: theme.gradient,
+    avatarSeed: Math.random().toString(36).slice(2, 10),
+    createdAt: new Date().toISOString()
+  };
+  localStorage.setItem('pantryPalProfile', JSON.stringify(profile));
+  localStorage.setItem('pantryPalAccountCreated', 'true');
+  return profile;
+}
+
+function ensureUserProfile() {
+  let profile = getUserProfile();
   if (profile && profile.id) return profile;
 
   const theme = randomTheme();
@@ -77,20 +97,20 @@ function applyThemeStyles(profile) {
 function openAccountOnboardingModal() {
   const profile = ensureUserProfile();
   const initials = getProfileInitials(profile.name);
+  document.body.classList.add('pantry-pal-modal-required');
 
-  openModal('Pantry Pal Setup Complete', `
+  openModal('Pantry Pal Onboarding', `
     <div class="account-summary-card">
       <div class="account-avatar account-avatar-lg" style="background:${profile.accent};">${initials}</div>
       <div class="account-summary-copy">
         <strong>${profile.name}</strong>
-        <p>Your account was created automatically and your avatar was themed with <strong>${profile.theme}</strong>.</p>
-        <p>Welcome to a refined pantry experience with polished glass styling, smart scanning, and faster kitchen organization.</p>
+        <p>Your Pantry Pal account is ready. Finish onboarding to unlock smart grocery scanning, pantry snapshots, and personalized kitchen recommendations.</p>
       </div>
     </div>
     <div class="onboarding-steps">
       <div class="step">✅ Account created</div>
       <div class="step">🎨 Theme selected</div>
-      <div class="step">📦 Ready to organize</div>
+      <div class="step">🚀 Onboarding complete</div>
     </div>
     <div class="modal-actions">
       <button id="complete-onboarding" class="scanner-action-btn" type="button">Finish setup</button>
@@ -103,6 +123,7 @@ function openAccountOnboardingModal() {
   if (completeBtn) {
     completeBtn.addEventListener('click', () => {
       localStorage.setItem('pantryPalOnboardingSeen', 'true');
+      document.body.classList.remove('pantry-pal-modal-required');
       closeModal();
     });
   }
@@ -120,6 +141,54 @@ function openAccountOnboardingModal() {
       openAccountOnboardingModal();
     });
   }
+}
+
+function openAccountCreationModal() {
+  document.body.classList.add('pantry-pal-modal-required');
+  openModal('Create your Pantry Pal account', `
+    <div class="account-creation-form">
+      <p style="font-family:Outfit; margin-bottom:12px; color:#dbeafe;">Please create a Pantry Pal account to continue. This account powers onboarding, your pantry snapshot, and smart scan features.</p>
+      <label for="pantry-pal-name">Full name</label>
+      <input id="pantry-pal-name" type="text" placeholder="Jane Doe" />
+      <label for="pantry-pal-email">Email address</label>
+      <input id="pantry-pal-email" type="email" placeholder="jane@pantrypal.com" />
+      <div id="account-error" style="color:#f8b4b4; margin-top:10px; font-size:0.92rem;"></div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button id="create-account" class="scanner-action-btn" type="button">Create account</button>
+      </div>
+    </div>
+  `);
+
+  const createBtn = document.getElementById('create-account');
+  const errorEl = document.getElementById('account-error');
+  if (createBtn) {
+    createBtn.addEventListener('click', () => {
+      const nameInput = document.getElementById('pantry-pal-name');
+      const emailInput = document.getElementById('pantry-pal-email');
+      const name = nameInput ? nameInput.value : '';
+      const email = emailInput ? emailInput.value : '';
+      if (!name.trim()) {
+        if (errorEl) errorEl.textContent = 'Please enter your full name to continue.';
+        return;
+      }
+      const profile = createUserProfile({ name, email });
+      applyThemeStyles(profile);
+      document.body.classList.remove('pantry-pal-modal-required');
+      closeModal();
+      startApp();
+      openAccountOnboardingModal();
+    });
+  }
+}
+
+function startApp() {
+  injectAvatars();
+  injectAnalytics();
+  applyBrandingReplacements();
+  createFloatingScannerPanel();
+  createTopMenuButton();
+  createPantrySnapshotPanel();
+  document.addEventListener('click', handleGlobalActions, true);
 }
 
 // Inject Analytics Dashboard
@@ -680,18 +749,14 @@ function handleGlobalActions(event) {
 
 document.addEventListener('DOMContentLoaded', () => {
   createModal();
-  injectAvatars();
-  injectAnalytics();
-  applyBrandingReplacements();
-  setupOnboardingBanner();
-  createFloatingScannerPanel();
-  createTopMenuButton();
-  createPantrySnapshotPanel();
-
-  if (!localStorage.getItem('pantryPalOnboardingSeen') && window.location.pathname.includes('onboarding.html')) {
-    localStorage.setItem('pantryPalOnboardingSeen', 'true');
-    openAccountOnboardingModal();
+  const profile = getUserProfile();
+  if (!profile) {
+    openAccountCreationModal();
+    return;
   }
 
-  document.addEventListener('click', handleGlobalActions, true);
+  startApp();
+  if (!localStorage.getItem('pantryPalOnboardingSeen')) {
+    openAccountOnboardingModal();
+  }
 });

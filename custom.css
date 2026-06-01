@@ -102,12 +102,12 @@ div[dir="auto"] {
 
 /* Avatar Styling */
 .user-avatar {
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid white;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  border: 1.5px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -115,23 +115,23 @@ div[dir="auto"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   color: var(--avatar-text);
   background: var(--avatar-bg);
   font-weight: 700;
-  font-size: 0.95rem;
-  border: 2px solid rgba(255,255,255,0.28);
-  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+  font-size: 0.88rem;
+  border: 1.5px solid rgba(255,255,255,0.28);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
 }
 
 .account-summary-card {
   display: flex;
-  gap: 18px;
+  gap: 14px;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 18px;
+  margin-bottom: 14px;
+  padding: 14px;
   border-radius: 24px;
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.14);
@@ -139,40 +139,41 @@ div[dir="auto"] {
 }
 
 .account-avatar-lg {
-  width: 72px;
-  height: 72px;
-  font-size: 1.25rem;
+  width: 60px;
+  height: 60px;
+  font-size: 1.1rem;
 }
 
 .account-summary-copy {
   color: #e2e8f0;
-  font-size: 0.98rem;
-  line-height: 1.55;
+  font-size: 0.92rem;
+  line-height: 1.45;
 }
 
 .account-summary-copy strong {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: #ffffff;
 }
 
 .onboarding-steps {
   display: grid;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
 .step {
-  padding: 12px 14px;
-  border-radius: 16px;
+  padding: 10px 12px;
+  border-radius: 14px;
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.12);
   color: #e2e8f0;
+  font-size: 0.93rem;
 }
 
 .modal-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
@@ -213,15 +214,46 @@ div[dir="auto"] {
 
 .custom-modal {
   background: rgba(8, 15, 31, 0.96);
-  padding: 30px;
-  border-radius: 28px;
+  padding: 24px;
+  border-radius: 24px;
   width: 90%;
-  max-width: 520px;
-  box-shadow: 0 32px 80px rgba(0,0,0,0.28);
+  max-width: 460px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.24);
   transform: translateY(20px);
   transition: transform 0.3s ease;
   position: relative;
   border: 1px solid rgba(255,255,255,0.14);
+}
+
+.pantry-pal-modal-required .modal-close {
+  display: none !important;
+}
+
+.account-creation-form {
+  display: grid;
+  gap: 10px;
+}
+
+.account-creation-form label {
+  color: #cbd5e1;
+  font-size: 0.92rem;
+}
+
+.account-creation-form input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.06);
+  color: #f8fafc;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+}
+
+.account-creation-form input:focus {
+  outline: none;
+  border-color: rgba(59,130,246,0.8);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.14);
 }
 
 .custom-modal h2 {
@@ -272,10 +304,10 @@ div[dir="auto"] {
 /* Scanner Video */
 #scanner-video {
   width: 100%;
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
   background: #000;
-  margin-top: 15px;
+  margin-top: 12px;
 }
 
 /* Remove legacy green app accents */
@@ -297,13 +329,13 @@ div[dir="auto"] {
 
 #floating-scanner-panel {
   position: fixed;
-  right: 20px;
-  bottom: 24px;
+  right: 16px;
+  bottom: 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   z-index: 10000;
-  max-width: 220px;
+  max-width: 210px;
 }
 
 .scanner-action-btn {
@@ -314,16 +346,17 @@ div[dir="auto"] {
   font-family: 'Outfit', sans-serif;
   font-weight: 600;
   border-radius: 999px;
-  padding: 12px 16px;
-  box-shadow: 0 12px 26px rgba(59, 130, 246, 0.24);
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.22);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .scanner-action-btn:hover,
 .scanner-action-btn:focus {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 32px rgba(59, 130, 246, 0.32);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(59, 130, 246, 0.28);
 }
 
 #pantry-pal-top-menu {
@@ -334,26 +367,26 @@ div[dir="auto"] {
 }
 
 #pantry-pal-top-menu button {
-  width: 56px;
-  height: 56px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.16);
   color: #ffffff;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .pantry-snapshot-panel {
   position: fixed;
-  left: 20px;
-  bottom: 24px;
-  width: min(320px, calc(100vw - 48px));
+  left: 16px;
+  bottom: 18px;
+  width: min(300px, calc(100vw - 40px));
   z-index: 10000;
   background: rgba(8, 15, 31, 0.88);
   border: 1px solid rgba(255,255,255,0.16);
-  border-radius: 24px;
-  padding: 18px;
+  border-radius: 22px;
+  padding: 14px;
   box-shadow: 0 30px 70px rgba(0,0,0,0.18);
   backdrop-filter: blur(22px);
 }
@@ -403,10 +436,11 @@ div[dir="auto"] {
   background: rgba(255,255,255,0.08);
   border-radius: 16px;
   color: #e2e8f0;
-  padding: 14px 16px;
+  padding: 12px 14px;
   font-family: 'Outfit', sans-serif;
   cursor: pointer;
   text-align: left;
+  font-size: 0.95rem;
 }
 
 .menu-link:hover {
