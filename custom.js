@@ -206,7 +206,11 @@ function startApp() {
   injectAnalytics();
   applyBrandingReplacements();
   wireExportedHamburgerMenu();
-  document.addEventListener('click', handleGlobalActions, true);
+  if (!window.pantryPalGlobalActionsBound) {
+    document.addEventListener('click', handleGlobalActions, true);
+    document.addEventListener('keydown', handleGlobalKeyActions, true);
+    window.pantryPalGlobalActionsBound = true;
+  }
 }
 
 // Inject Analytics Dashboard
@@ -653,7 +657,7 @@ function openPantryModal() {
 function wireExportedHamburgerMenu() {
   const candidates = document.querySelectorAll('[tabindex="0"]');
   candidates.forEach(candidate => {
-    if (candidate.innerText.trim()) return;
+    if ((candidate.textContent || '').trim()) return;
     const lines = candidate.querySelectorAll(':scope > div');
     if (lines.length !== 3) return;
     candidate.setAttribute('role', 'button');
@@ -666,31 +670,47 @@ function openMenuModal() {
   const inventory = getPantryInventory();
   const count = inventory.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 
-  openModal('Pantry Pal Menu', `
-    <div class="menu-card">
-      <button class="menu-link" data-target="index.html">🏠 Home</button>
-      <button class="menu-link" data-target="inventory.html">🗄️ Inventory</button>
-      <button class="menu-link" data-target="grocery.html">🛒 Grocery</button>
-      <button class="menu-link" data-target="meals.html">🍽️ Meals</button>
-      <button class="menu-link" data-target="settings.html">⚙️ Settings</button>
-      <div class="menu-summary">${count} pantry items tracked</div>
-      <button class="scanner-action-btn" id="menu-scan-barcode">📷 Scan barcode</button>
-      <button class="scanner-action-btn secondary" id="menu-scan-receipt">🧾 Receipt scan</button>
+  openModal('Menu', `
+    <div class="menu-card menu-card-polished">
+      <div class="menu-profile-row">
+        <div>
+          <strong>Pantry Pal</strong>
+          <span>${count} items tracked</span>
+        </div>
+        <button class="menu-chip" type="button" data-target="profile.html">Account</button>
+      </div>
+      <div class="menu-section-label">Main</div>
+      <button class="menu-link" type="button" data-target="index.html"><span>Home</span><small>Dashboard overview</small></button>
+      <button class="menu-link" type="button" data-target="inventory.html"><span>Inventory</span><small>Pantry and low-stock items</small></button>
+      <button class="menu-link" type="button" data-target="grocery.html"><span>Grocery</span><small>Lists, checkout, and orders</small></button>
+      <button class="menu-link" type="button" data-target="meals.html"><span>Meals</span><small>Plan recipes from what you have</small></button>
+      <div class="menu-section-label">Tools</div>
+      <div class="menu-tool-grid">
+        <button class="menu-tool" type="button" data-action="barcode">Scan barcode</button>
+        <button class="menu-tool" type="button" data-action="receipt">Scan receipt</button>
+        <button class="menu-tool" type="button" data-target="item/add.html">Add item</button>
+        <button class="menu-tool" type="button" data-target="settings.html">Settings</button>
+      </div>
     </div>
   `);
 
-  document.querySelectorAll('.menu-link').forEach(btn => {
+  document.querySelectorAll('.menu-link, .menu-chip, .menu-tool').forEach(btn => {
     btn.addEventListener('click', (event) => {
       const target = event.currentTarget.dataset.target;
+      const action = event.currentTarget.dataset.action;
       if (target) {
-        window.location.href = target;
+        navigateTo(target);
+        return;
+      }
+      if (action === 'barcode') {
+        openBarcodeScannerModal();
+        return;
+      }
+      if (action === 'receipt') {
+        openReceiptScannerModal();
       }
     });
   });
-  const barcodeBtn = document.getElementById('menu-scan-barcode');
-  const receiptBtn = document.getElementById('menu-scan-receipt');
-  if (barcodeBtn) barcodeBtn.addEventListener('click', openBarcodeScannerModal);
-  if (receiptBtn) receiptBtn.addEventListener('click', openReceiptScannerModal);
 }
 
 function createFloatingScannerPanel() {
@@ -711,6 +731,101 @@ function createFloatingScannerPanel() {
   document.getElementById('floating-pantry-btn').addEventListener('click', openPantryModal);
 }
 
+function getActionText(target) {
+  return (
+    target.dataset.pantryPalActionLabel ||
+    target.getAttribute('aria-label') ||
+    target.getAttribute('title') ||
+    target.textContent ||
+    ''
+  ).replace(/\s+/g, ' ').trim();
+}
+
+function navigateTo(path) {
+  if (!path) return;
+  window.location.href = path.startsWith('/') || /^https?:\/\//i.test(path)
+    ? path
+    : `/${path}`;
+}
+
+function completeLocalAuth({ name, email, seenOnboarding = false }) {
+  const profile = createUserProfile({ name, email });
+  applyThemeStyles(profile);
+  if (seenOnboarding) {
+    localStorage.setItem('pantryPalOnboardingSeen', 'true');
+  }
+  navigateTo('index.html');
+}
+
+function isAuthRoute() {
+  return window.location.pathname.includes('/auth/login');
+}
+
+function renderAuthScreen(mode = 'login') {
+  const root = document.getElementById('root');
+  if (!root) return;
+  document.body.classList.add('pantry-pal-auth-page', 'pantry-pal-ready');
+  root.innerHTML = `
+    <main class="auth-shell">
+      <section class="auth-card">
+        <button class="auth-close" type="button" data-auth-action="guest" aria-label="Browse without account">×</button>
+        <div class="auth-mark">PP</div>
+        <h1>${mode === 'signup' ? 'Create your pantry' : 'Welcome back'}</h1>
+        <p>${mode === 'signup' ? 'Start with a clean pantry dashboard and add groceries when you are ready.' : 'Sign in locally to keep the prototype simple and usable.'}</p>
+        <div class="auth-tabs" role="tablist">
+          <button class="${mode === 'login' ? 'active' : ''}" type="button" data-auth-mode="login">Log in</button>
+          <button class="${mode === 'signup' ? 'active' : ''}" type="button" data-auth-mode="signup">Sign up</button>
+        </div>
+        <form class="auth-form">
+          ${mode === 'signup' ? '<label>Name<input id="auth-name" type="text" autocomplete="name" placeholder="Jane Doe"></label>' : ''}
+          <label>Email<input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+          <label>Password<input id="auth-password" type="password" autocomplete="${mode === 'signup' ? 'new-password' : 'current-password'}" placeholder="••••••••"></label>
+          <button class="auth-primary" type="submit">${mode === 'signup' ? 'Create account' : 'Log in'}</button>
+        </form>
+        <button class="auth-demo" type="button" data-auth-action="demo">Use demo account</button>
+        <button class="auth-guest" type="button" data-auth-action="guest">Browse without account</button>
+      </section>
+      <aside class="auth-aside">
+        <div class="auth-aside-line"></div>
+        <h2>Less clutter. Better grocery decisions.</h2>
+        <p>Inventory, lists, meals, and checkout stay one tap away from a single menu.</p>
+      </aside>
+    </main>
+  `;
+
+  document.querySelectorAll('[data-auth-mode]').forEach(button => {
+    button.addEventListener('click', () => renderAuthScreen(button.dataset.authMode));
+  });
+  document.querySelector('.auth-form')?.addEventListener('submit', event => {
+    event.preventDefault();
+    const email = document.getElementById('auth-email')?.value.trim() || 'guest@pantrypal.local';
+    const nameInput = document.getElementById('auth-name')?.value.trim();
+    const name = nameInput || email.split('@')[0] || 'Pantry Pal Guest';
+    completeLocalAuth({ name, email });
+  });
+  document.querySelectorAll('[data-auth-action="demo"]').forEach(button => {
+    button.addEventListener('click', () => completeLocalAuth({
+      name: 'Demo Pantry',
+      email: 'demo@pantrypal.local',
+      seenOnboarding: true
+    }));
+  });
+  document.querySelectorAll('[data-auth-action="guest"]').forEach(button => {
+    button.addEventListener('click', () => completeLocalAuth({
+      name: 'Guest Pantry',
+      email: 'guest@pantrypal.local',
+      seenOnboarding: true
+    }));
+  });
+}
+
+function handleGlobalKeyActions(event) {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  const target = event.target.closest('button, a, [role="button"], [tabindex="0"], .r-1loqt21');
+  if (!target) return;
+  handleGlobalActions(event);
+}
+
 function handleGlobalActions(event) {
   const target = event.target.closest('button, a, [role="button"], [tabindex="0"], .r-1loqt21');
   if (!target) return;
@@ -721,10 +836,8 @@ function handleGlobalActions(event) {
     openMenuModal();
     return;
   }
-  const text = ((target.innerText || target.getAttribute('aria-label') || '') || '').trim();
+  const text = getActionText(target);
   if (!text) return;
-
-  const action = text.toLowerCase();
 
   if (/\b(scan barcode)\b/i.test(text)) {
     event.preventDefault();
@@ -743,7 +856,7 @@ function handleGlobalActions(event) {
   if (/\b(add item|➕|＋)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'item/add.html';
+    navigateTo('item/add.html');
     return;
   }
 
@@ -764,98 +877,98 @@ function handleGlobalActions(event) {
   if (/\b(generate meal plan|plan week|ai meal plan|meal plan|plan meals)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'meals.html';
+    navigateTo('meals.html');
     return;
   }
 
   if (/\b(order now|grocery|shop|buy)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'grocery.html';
+    navigateTo('grocery.html');
     return;
   }
 
   if (/\b(3d designer|designer|ar preview)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'designer.html';
+    navigateTo('designer.html');
     return;
   }
 
   if (/\b(inventory history|activity log)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'inventory-history.html';
+    navigateTo('inventory-history.html');
     return;
   }
 
   if (/\b(inventory|pantry|stock|warehouse)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'inventory.html';
+    navigateTo('inventory.html');
     return;
   }
 
   if (/\b(settings|preferences|gear|⚙️)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'settings.html';
+    navigateTo('settings.html');
     return;
   }
 
   if (/\b(forecast|forecasting)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'forecasting.html';
+    navigateTo('forecasting.html');
     return;
   }
 
   if (/\b(smart cart|shopping list)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'smart-cart.html';
+    navigateTo('smart-cart.html');
     return;
   }
 
   if (/\b(community)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'community.html';
+    navigateTo('community.html');
     return;
   }
 
   if (/\b(subscription|upgrade|premium)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'subscription.html';
+    navigateTo('subscription.html');
     return;
   }
 
   if (/\b(privacy)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'privacy.html';
+    navigateTo('privacy.html');
     return;
   }
 
   if (/\b(add recipe|create recipe)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'recipe/add.html';
+    navigateTo('recipe/add.html');
     return;
   }
 
   if (/\b(order history|past orders)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'grocery/orders.html';
+    navigateTo('grocery/orders.html');
     return;
   }
 
   if (/\b(checkout|review order|continue to checkout)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'grocery/checkout.html';
+    navigateTo('grocery/checkout.html');
     return;
   }
 
@@ -876,7 +989,7 @@ function handleGlobalActions(event) {
   if (/\b(profile|account|👤)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
-    window.location.href = 'profile.html';
+    navigateTo('profile.html');
     return;
   }
 
@@ -890,6 +1003,10 @@ function handleGlobalActions(event) {
 
 document.addEventListener('DOMContentLoaded', () => {
   createModal();
+  if (isAuthRoute()) {
+    renderAuthScreen('login');
+    return;
+  }
   const profile = getUserProfile();
   if (!profile) {
     openAccountCreationModal();
