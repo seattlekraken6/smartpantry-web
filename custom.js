@@ -274,9 +274,13 @@ window.openModal = function(title, contentHTML) {
   const titleEl = document.getElementById('modal-title');
   const contentEl = document.getElementById('modal-content');
   const overlay = document.getElementById('global-modal-overlay');
+  const modal = document.getElementById('global-modal');
   if (!titleEl || !contentEl || !overlay) return;
   titleEl.textContent = title;
   contentEl.innerHTML = contentHTML;
+  if (modal) {
+    modal.classList.toggle('menu-modal', title.toLowerCase() === 'menu');
+  }
   overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
 };
@@ -713,6 +717,15 @@ function openMenuModal() {
   });
 }
 
+function openFeedbackModal(title, message, actions = '') {
+  openModal(title, `
+    <div class="feedback-card">
+      <p>${message}</p>
+      ${actions}
+    </div>
+  `);
+}
+
 function createFloatingScannerPanel() {
   if (document.getElementById('floating-scanner-panel')) return;
   const panel = document.createElement('div');
@@ -860,7 +873,37 @@ function handleGlobalActions(event) {
     return;
   }
 
-  if (/\b(camera|preview|smart capture|camera detection)\b/i.test(text)) {
+  if (/^(⇅|sort)$/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    openFeedbackModal('Sort inventory', 'Inventory sorting is ready. The static export keeps the same sample data, but this control now responds.');
+    return;
+  }
+
+  if (/^(🗄️\s*)?(fridge|pantry)\b/i.test(text) || /^(≡\s*)?all\s*\(\d+\)$/i.test(text) || /^(🧺\s*)?all$/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    const label = text.replace(/[^\p{L}\p{N}\s()]/gu, '').trim() || 'All';
+    openFeedbackModal('Inventory view', `Showing ${label}. Add items to populate this filtered inventory view.`);
+    return;
+  }
+
+  if (/\b(produce|dairy|meat|grains|canned|spices|snacks|drinks|frozen|condiments)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    const label = text.replace(/[^\p{L}\p{N}\s-]/gu, '').trim();
+    openFeedbackModal('Category selected', `Filtering inventory by ${label}.`);
+    return;
+  }
+
+  if (/\b(smart capture)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    navigateTo('smart-capture.html');
+    return;
+  }
+
+  if (/\b(camera|preview|camera detection)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
     openCameraCaptureModal();
@@ -874,10 +917,46 @@ function handleGlobalActions(event) {
     return;
   }
 
-  if (/\b(generate meal plan|plan week|ai meal plan|meal plan|plan meals)\b/i.test(text)) {
+  if (/\b(generate meal plan|plan week|ai plan|ai meal plan|meal plan|plan meals)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
     navigateTo('meals.html');
+    return;
+  }
+
+  if (/^(🛒\s*)?list$/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    navigateTo('grocery.html');
+    return;
+  }
+
+  if (/^(🔄\s*)?auto$/i.test(text) || /\b(auto replenishment|auto-order|recurring)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    navigateTo('smart-cart.html');
+    return;
+  }
+
+  if (/^(📦\s*)?orders$/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    navigateTo('grocery/orders.html');
+    return;
+  }
+
+  if (/\b(instacart|amazon fresh|walmart|whole foods|kroger)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    const store = text.replace(/[^\p{L}\p{N}\s]/gu, '').trim();
+    openFeedbackModal('Store selected', `${store} is selected for this grocery list.`);
+    return;
+  }
+
+  if (/\b(open in store app|schedule delivery)\b/i.test(text) || /^set$/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    openFeedbackModal('Delivery setup', 'Delivery scheduling is available in this prototype flow. Add grocery items first, then continue to checkout.');
     return;
   }
 
@@ -916,6 +995,34 @@ function handleGlobalActions(event) {
     return;
   }
 
+  if (/\b(log in|sign up|login|signup)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    navigateTo('auth/login.html');
+    return;
+  }
+
+  if (/\b(kitchen name|members|dietary preferences|allergies|cuisine preferences|weekly budget|meal planning style|recipe complexity|budget mode|expiry alerts|low stock alerts|meal reminders|delivery updates|dark mode)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    openFeedbackModal('Setting selected', 'This setting is now selectable. Connect Firebase to persist it across devices.');
+    return;
+  }
+
+  if (/\b(rate pantry pal|share app|version)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    openFeedbackModal('About Pantry Pal', 'Thanks for checking this section. Sharing and app-store rating are placeholders in this static export.');
+    return;
+  }
+
+  if (/\b(onboarding tutorial)\b/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    openAccountOnboardingModal();
+    return;
+  }
+
   if (/\b(forecast|forecasting)\b/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
@@ -951,7 +1058,7 @@ function handleGlobalActions(event) {
     return;
   }
 
-  if (/\b(add recipe|create recipe)\b/i.test(text)) {
+  if (/\b(add recipe|create recipe)\b/i.test(text) || /^recipe$/i.test(text)) {
     event.preventDefault();
     event.stopPropagation();
     navigateTo('recipe/add.html');

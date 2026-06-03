@@ -236,6 +236,22 @@ button, input, textarea, select {
   transform: translateY(0);
 }
 
+.custom-modal.menu-modal {
+  width: min(92vw, 390px);
+  margin-left: auto;
+  margin-right: clamp(12px, 4vw, 42px);
+  border-radius: 26px;
+  background: rgba(250, 252, 250, 0.96);
+  border: 1px solid rgba(26, 40, 32, 0.08);
+  box-shadow: 0 30px 90px rgba(26, 40, 32, 0.18);
+}
+
+.custom-modal.menu-modal h2 {
+  color: #1a2820;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+}
+
 .custom-modal h2 {
   color: var(--text-primary);
   font-size: 1.1rem;
@@ -541,7 +557,10 @@ button, a, input, [role="button"] {
 }
 
 .menu-card-polished .menu-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   width: 100%;
   padding: 13px 14px;
   border-radius: 14px;
@@ -554,6 +573,7 @@ button, a, input, [role="button"] {
 .menu-card-polished .menu-link:hover {
   border-color: #dce8e2;
   background: #f7faf8;
+  transform: translateX(2px);
 }
 
 .menu-card-polished .menu-link span {
@@ -571,6 +591,12 @@ button, a, input, [role="button"] {
   line-height: 1.35;
 }
 
+.menu-card-polished .menu-link::after {
+  content: '→';
+  color: #9bad9f;
+  font-weight: 900;
+}
+
 .menu-tool-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -580,11 +606,28 @@ button, a, input, [role="button"] {
 .menu-tool {
   border-radius: 12px;
   background: #f4f7f5;
+  color: #28453a;
+  min-height: 42px;
 }
 
 .menu-tool:hover,
 .menu-chip:hover {
   background: #e9f1ed;
+}
+
+.feedback-card p {
+  margin: 0;
+  color: #607268;
+  line-height: 1.55;
+}
+
+@media (max-width: 640px) {
+  .custom-modal.menu-modal {
+    align-self: flex-end;
+    width: 100%;
+    margin: auto 0 0;
+    border-radius: 24px 24px 0 0;
+  }
 }
 
 /* ─── Clean Auth Screen ──────────────────────────────────────────────────── */
