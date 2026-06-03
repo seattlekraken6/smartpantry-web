@@ -22,6 +22,61 @@ function injectAvatars() {
   });
 }
 
+const PANTRY_PAL_LOGO_PATH = '/assets/branding/pantry-pal-logo-transparent.png';
+
+const PANTRY_PAL_THEMES = [
+  {
+    id: 'garden',
+    name: 'Garden',
+    accent: '#6F9A48',
+    gradient: 'linear-gradient(135deg, #8FBF5A 0%, #547D38 100%)',
+    bg: '#F7FAF1',
+    surface: '#FFFFFF',
+    text: '#1F2A18',
+    muted: '#68785A'
+  },
+  {
+    id: 'midnight',
+    name: 'Midnight',
+    accent: '#6366F1',
+    gradient: 'linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)',
+    bg: '#0F1020',
+    surface: '#191A2E',
+    text: '#F4F7FF',
+    muted: '#AAB0CF'
+  },
+  {
+    id: 'citrus',
+    name: 'Citrus',
+    accent: '#E6A126',
+    gradient: 'linear-gradient(135deg, #F6C453 0%, #E68726 100%)',
+    bg: '#FFF8EA',
+    surface: '#FFFFFF',
+    text: '#2A2116',
+    muted: '#88745A'
+  },
+  {
+    id: 'coastal',
+    name: 'Coastal',
+    accent: '#0EA5A4',
+    gradient: 'linear-gradient(135deg, #22D3EE 0%, #0EA5A4 100%)',
+    bg: '#F0FBFA',
+    surface: '#FFFFFF',
+    text: '#123233',
+    muted: '#5E7D80'
+  },
+  {
+    id: 'berry',
+    name: 'Berry',
+    accent: '#BE4B8B',
+    gradient: 'linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)',
+    bg: '#FFF4FA',
+    surface: '#FFFFFF',
+    text: '#2B1724',
+    muted: '#8A6077'
+  }
+];
+
 function getProfileInitials(name) {
   return name
     .split(' ')
@@ -32,13 +87,7 @@ function getProfileInitials(name) {
 }
 
 function randomTheme() {
-  const themes = [
-    { name: 'Midnight', accent: '#6366F1', gradient: 'linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)' },
-    { name: 'Aurora', accent: '#0EA5E9', gradient: 'linear-gradient(135deg, #38BDF8 0%, #0EA5E9 100%)' },
-    { name: 'Sterling', accent: '#94A3B8', gradient: 'linear-gradient(135deg, #CBD5E1 0%, #94A3B8 100%)' },
-    { name: 'Slate', accent: '#334155', gradient: 'linear-gradient(135deg, #0F172A 0%, #334155 100%)' }
-  ];
-  return themes[Math.floor(Math.random() * themes.length)];
+  return PANTRY_PAL_THEMES[Math.floor(Math.random() * PANTRY_PAL_THEMES.length)];
 }
 
 function getUserProfile() {
@@ -58,6 +107,7 @@ function createUserProfile({ name, email }) {
     name: name ? name.trim() : `Pantry Pal ${theme.name}`,
     email: email ? email.trim() : '',
     theme: theme.name,
+    themeId: theme.id,
     accent: theme.accent,
     gradient: theme.gradient,
     avatarSeed: Math.random().toString(36).slice(2, 10),
@@ -77,6 +127,7 @@ function ensureUserProfile() {
     id: `pp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
     name: `Pantry Pal ${theme.name}`,
     theme: theme.name,
+    themeId: theme.id,
     accent: theme.accent,
     gradient: theme.gradient,
     avatarSeed: Math.random().toString(36).slice(2, 10),
@@ -87,14 +138,24 @@ function ensureUserProfile() {
 }
 
 function applyThemeStyles(profile) {
-  document.documentElement.style.setProperty('--primary-gradient', profile.gradient);
-  document.documentElement.style.setProperty('--avatar-bg', profile.accent);
-  document.documentElement.style.setProperty('--accent', profile.accent);
-  document.documentElement.style.setProperty('--accent-light', profile.gradient ? profile.gradient.split(' ')[0] : '#D9A85C');
-  document.documentElement.style.setProperty('--accent-glow', profile.accent + '33');
-  document.documentElement.style.setProperty('--glass-bg', 'rgba(20, 17, 12, 0.92)');
-  document.documentElement.style.setProperty('--glass-border', 'rgba(255, 255, 255, 0.08)');
-  document.documentElement.style.setProperty('--shadow-soft', '0 22px 70px rgba(0, 0, 0, 0.35)');
+  const selectedTheme = PANTRY_PAL_THEMES.find(theme => theme.id === profile.themeId || theme.name === profile.theme) || PANTRY_PAL_THEMES[0];
+  document.documentElement.dataset.pantryTheme = selectedTheme.id;
+  document.documentElement.style.setProperty('--primary-gradient', selectedTheme.gradient);
+  document.documentElement.style.setProperty('--avatar-bg', selectedTheme.accent);
+  document.documentElement.style.setProperty('--accent', selectedTheme.accent);
+  document.documentElement.style.setProperty('--accent-light', selectedTheme.accent + '22');
+  document.documentElement.style.setProperty('--accent-glow', selectedTheme.accent + '33');
+  document.documentElement.style.setProperty('--pp-primary', selectedTheme.accent);
+  document.documentElement.style.setProperty('--pp-primary-dark', selectedTheme.accent);
+  document.documentElement.style.setProperty('--pp-bg', selectedTheme.bg);
+  document.documentElement.style.setProperty('--pp-surface', selectedTheme.surface);
+  document.documentElement.style.setProperty('--pp-surface2', selectedTheme.bg);
+  document.documentElement.style.setProperty('--pp-text', selectedTheme.text);
+  document.documentElement.style.setProperty('--pp-muted', selectedTheme.muted);
+  document.documentElement.style.setProperty('--pp-border', selectedTheme.accent + '33');
+  document.documentElement.style.setProperty('--glass-bg', selectedTheme.surface);
+  document.documentElement.style.setProperty('--glass-border', selectedTheme.accent + '22');
+  document.documentElement.style.setProperty('--shadow-soft', '0 22px 70px rgba(0, 0, 0, 0.18)');
 }
 
 function openAccountOnboardingModal() {
@@ -318,43 +379,6 @@ function safeJsonParse(value, fallback) {
   }
 }
 
-function getGeminiApiKey() {
-  return (
-    localStorage.getItem('pantryPalGeminiApiKey') ||
-    window.PANTRY_PAL_GEMINI_API_KEY ||
-    ''
-  ).trim();
-}
-
-function openGeminiSettingsModal() {
-  openModal('AI Setup', `
-    <div class="pp-input-group">
-      <label class="pp-label" for="gemini-api-key">Gemini API key</label>
-      <input id="gemini-api-key" class="pp-input" type="password" placeholder="Paste your Gemini API key" value="${escapeHtml(getGeminiApiKey())}" />
-    </div>
-    <p class="account-creation-copy">The key is stored only in this browser's local storage. For deployed sites, set <strong>GEMINI_API_KEY</strong> on the server and use the built-in proxy instead.</p>
-    <div class="modal-actions">
-      <button id="save-gemini-key" class="scanner-action-btn" type="button">Save key</button>
-      <button id="clear-gemini-key" class="scanner-action-btn secondary" type="button">Clear</button>
-    </div>
-  `);
-
-  document.getElementById('save-gemini-key')?.addEventListener('click', () => {
-    const value = document.getElementById('gemini-api-key')?.value.trim();
-    if (!value) {
-      openFeedbackModal('AI Setup', 'Paste a Gemini API key first.');
-      return;
-    }
-    localStorage.setItem('pantryPalGeminiApiKey', value);
-    openFeedbackModal('AI Setup', 'Gemini is ready for receipt scanning, photo capture, voice input, and meal tracking.');
-  });
-
-  document.getElementById('clear-gemini-key')?.addEventListener('click', () => {
-    localStorage.removeItem('pantryPalGeminiApiKey');
-    openFeedbackModal('AI Setup', 'The local Gemini key was cleared.');
-  });
-}
-
 function extractJsonObject(text) {
   const raw = String(text || '').trim();
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -372,44 +396,40 @@ function extractJsonObject(text) {
   return null;
 }
 
-async function callGeminiJSON({ prompt, imageDataUrl, schemaHint }) {
-  const parts = [{ text: `${prompt}\n\nReturn only valid JSON. ${schemaHint || ''}`.trim() }];
+async function callOpenAIJSON({ prompt, imageDataUrl, schemaHint }) {
+  const content = [{ type: 'input_text', text: `${prompt}\n\nReturn only valid JSON. ${schemaHint || ''}`.trim() }];
   if (imageDataUrl) {
-    const [meta, data] = imageDataUrl.split(',');
-    const mimeType = (meta.match(/^data:(.*?);base64$/) || [])[1] || 'image/jpeg';
-    parts.push({ inlineData: { mimeType, data } });
+    content.push({ type: 'input_image', image_url: imageDataUrl });
   }
 
   const payload = {
-    contents: [{ role: 'user', parts }],
-    generationConfig: {
-      temperature: 0.2,
-      responseMimeType: 'application/json'
-    }
+    model: 'gpt-4.1-mini',
+    input: [{ role: 'user', content }],
+    text: {
+      format: {
+        type: 'json_object'
+      }
+    },
+    temperature: 0.2
   };
 
-  const localKey = getGeminiApiKey();
-  const endpoint = localKey
-    ? 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
-    : '/api/gemini';
-  const response = await fetch(endpoint, {
+  const response = await fetch('/api/openai', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(localKey ? { 'x-goog-api-key': localKey } : {})
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
 
   if (!response.ok) {
     const detail = await response.text().catch(() => '');
-    throw new Error(detail || `Gemini request failed with ${response.status}`);
+    throw new Error(detail || `OpenAI request failed with ${response.status}`);
   }
 
   const data = await response.json();
-  const text = data?.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('\n') || '';
+  const text = data.output_text ||
+    data?.output?.flatMap(item => item.content || []).map(part => part.text || '').join('\n') ||
+    '';
   const parsed = extractJsonObject(text);
-  if (!parsed) throw new Error('Gemini returned a response that was not valid JSON.');
+  if (!parsed) throw new Error('OpenAI returned a response that was not valid JSON.');
   return parsed;
 }
 
@@ -474,16 +494,13 @@ function renderDetectedItems(container, items, sourceLabel) {
 
 function renderAiError(container, error, fallbackAction) {
   if (!container) return;
-  const needsKey = !getGeminiApiKey() && String(error.message || '').includes('/api/gemini');
   container.innerHTML = `
-    <p class="account-creation-copy">${needsKey ? 'AI needs a Gemini key before this static page can call Gemini.' : 'AI extraction failed.'}</p>
+    <p class="account-creation-copy">AI is temporarily unavailable. Try again after the server OpenAI key is configured.</p>
     <pre class="pp-error-text">${escapeHtml(String(error.message || error).slice(0, 500))}</pre>
     <div class="modal-actions">
-      <button id="open-ai-settings" class="scanner-action-btn" type="button">Set Gemini key</button>
       ${fallbackAction || ''}
     </div>
   `;
-  document.getElementById('open-ai-settings')?.addEventListener('click', openGeminiSettingsModal);
 }
 
 function openBarcodeScannerModal() {
