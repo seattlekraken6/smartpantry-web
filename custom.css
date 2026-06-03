@@ -31,6 +31,85 @@ body {
   min-height: 100vh;
 }
 
+html[data-pantry-theme] body,
+html[data-pantry-theme] #root,
+html[data-pantry-theme] #root > div:first-child {
+  background-color: var(--pp-bg) !important;
+  color: var(--pp-text) !important;
+}
+
+html[data-pantry-theme] [style*="background-color:rgba(248,253,248"],
+html[data-pantry-theme] [style*="background-color: rgba(248, 253, 248"],
+html[data-pantry-theme] [style*="background-color:rgb(248,250,249"],
+html[data-pantry-theme] [style*="background-color: rgb(248, 250, 249"],
+html[data-pantry-theme] [style*="background-color:rgba(255,255,255"],
+html[data-pantry-theme] [style*="background-color: rgba(255, 255, 255"],
+html[data-pantry-theme] [style*="background-color:rgb(255,255,255"],
+html[data-pantry-theme] [style*="background-color: rgb(255, 255, 255"],
+html[data-pantry-theme] [style*="background-color:white"],
+html[data-pantry-theme] [style*="background-color: white"] {
+  background-color: var(--pp-surface) !important;
+}
+
+html[data-pantry-theme] [style*="background-color:rgba(239,248,242"],
+html[data-pantry-theme] [style*="background-color: rgba(239, 248, 242"],
+html[data-pantry-theme] [style*="background-color:rgba(245,251,247"],
+html[data-pantry-theme] [style*="background-color: rgba(245, 251, 247"],
+html[data-pantry-theme] [style*="background-color:rgba(234,246,238"],
+html[data-pantry-theme] [style*="background-color: rgba(234, 246, 238"],
+html[data-pantry-theme] [style*="background-color:rgb(239,248,242"],
+html[data-pantry-theme] [style*="background-color: rgb(239, 248, 242"],
+html[data-pantry-theme] [style*="background-color:rgb(245,251,247"],
+html[data-pantry-theme] [style*="background-color: rgb(245, 251, 247"],
+html[data-pantry-theme] [style*="background-color:rgb(234,246,238"],
+html[data-pantry-theme] [style*="background-color: rgb(234, 246, 238"] {
+  background-color: color-mix(in srgb, var(--pp-surface) 82%, var(--pp-primary) 18%) !important;
+}
+
+html[data-pantry-theme] [style*="background-color:rgba(45,155,111"],
+html[data-pantry-theme] [style*="background-color: rgba(45, 155, 111"],
+html[data-pantry-theme] [style*="background-color:rgba(22,101,68"],
+html[data-pantry-theme] [style*="background-color: rgba(22, 101, 68"],
+html[data-pantry-theme] [style*="background-color:rgb(45,155,111"],
+html[data-pantry-theme] [style*="background-color: rgb(45, 155, 111"],
+html[data-pantry-theme] [style*="background-color:rgb(22,101,68"],
+html[data-pantry-theme] [style*="background-color: rgb(22, 101, 68"] {
+  background-color: var(--pp-primary) !important;
+}
+
+html[data-pantry-theme] [style*="color:rgba(26,40,32"],
+html[data-pantry-theme] [style*="color: rgba(26, 40, 32"],
+html[data-pantry-theme] [style*="color:rgba(31,42,24"],
+html[data-pantry-theme] [style*="color: rgba(31, 42, 24"],
+html[data-pantry-theme] [style*="color:rgb(26,40,32"],
+html[data-pantry-theme] [style*="color: rgb(26, 40, 32"],
+html[data-pantry-theme] [style*="color:rgb(31,42,24"],
+html[data-pantry-theme] [style*="color: rgb(31, 42, 24"] {
+  color: var(--pp-text) !important;
+}
+
+html[data-pantry-theme] [style*="color:rgba(107,127,109"],
+html[data-pantry-theme] [style*="color: rgba(107, 127, 109"],
+html[data-pantry-theme] [style*="color:rgba(104,120,90"],
+html[data-pantry-theme] [style*="color: rgba(104, 120, 90"],
+html[data-pantry-theme] [style*="color:rgb(107,127,109"],
+html[data-pantry-theme] [style*="color: rgb(107, 127, 109"],
+html[data-pantry-theme] [style*="color:rgb(104,120,90"],
+html[data-pantry-theme] [style*="color: rgb(104, 120, 90"] {
+  color: var(--pp-muted) !important;
+}
+
+html[data-pantry-theme] [style*="border-color:rgba(207,225,213"],
+html[data-pantry-theme] [style*="border-color: rgba(207, 225, 213"],
+html[data-pantry-theme] [style*="borderColor:rgba(207,225,213"],
+html[data-pantry-theme] [style*="borderColor: rgba(207, 225, 213"],
+html[data-pantry-theme] [style*="border-color:rgb(212,232,220"],
+html[data-pantry-theme] [style*="border-color: rgb(212, 232, 220"],
+html[data-pantry-theme] [style*="borderColor:rgb(212,232,220"],
+html[data-pantry-theme] [style*="borderColor: rgb(212, 232, 220"] {
+  border-color: var(--pp-border) !important;
+}
+
 /* ── Override green → indigo ────────────────────── */
 [style*="background-color:rgba(45,155,111"] {
   background-color: var(--pp-primary) !important;

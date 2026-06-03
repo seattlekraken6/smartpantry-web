@@ -73,7 +73,24 @@ app.post('/api/openai', async (req, res) => {
       body: JSON.stringify(req.body)
     });
     const text = await response.text();
-    res.status(response.status).type(response.headers.get('content-type') || 'application/json').send(text);
+    const contentType = response.headers.get('content-type') || 'application/json';
+    if (!response.ok) {
+      let upstream = {};
+      try {
+        upstream = JSON.parse(text);
+      } catch (error) {
+        upstream = { error: { message: text } };
+      }
+      return res.status(response.status).json({
+        error: response.status === 401
+          ? 'OpenAI rejected the configured server API key.'
+          : 'OpenAI request failed.',
+        status: response.status,
+        code: upstream?.error?.code || upstream?.error?.type || null,
+        detail: upstream?.error?.message || 'No upstream error detail was provided.'
+      });
+    }
+    res.status(response.status).type(contentType).send(text);
   } catch (error) {
     res.status(502).json({ error: 'OpenAI request failed', detail: error.message });
   }
