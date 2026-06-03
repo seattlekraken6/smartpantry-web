@@ -48,6 +48,9 @@ Requirements: Node.js 18+
 # Install dependencies
 npm install
 
+# Optional: enable AI receipt/photo/meal features through the server proxy
+export GEMINI_API_KEY="your-gemini-api-key"
+
 # Start the server (default port 4000)
 node serve-web.js
 

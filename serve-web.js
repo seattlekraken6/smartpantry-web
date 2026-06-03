@@ -4,9 +4,36 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.WEB_PORT || 4000;
-const DIST = path.join(__dirname, 'dist');
+const DIST = fs.existsSync(path.join(__dirname, 'dist'))
+  ? path.join(__dirname, 'dist')
+  : __dirname;
 
-// Serve static assets
+app.use(express.json({ limit: '12mb' }));
+
+app.post('/api/gemini', async (req, res) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return res.status(501).json({
+      error: 'GEMINI_API_KEY is not configured on this server. Set it in the environment or save a key in the browser AI Setup modal.'
+    });
+  }
+
+  try {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey
+      },
+      body: JSON.stringify(req.body)
+    });
+    const text = await response.text();
+    res.status(response.status).type(response.headers.get('content-type') || 'application/json').send(text);
+  } catch (error) {
+    res.status(502).json({ error: 'Gemini request failed', detail: error.message });
+  }
+});
+
 app.use(express.static(DIST));
 
 // SPA fallback: for any route not found as a file, serve the matching HTML or index.html
