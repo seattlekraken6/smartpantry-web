@@ -4,9 +4,7 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.WEB_PORT || 4000;
-const DIST = fs.existsSync(path.join(__dirname, 'dist'))
-  ? path.join(__dirname, 'dist')
-  : __dirname;
+const DIST = path.join(__dirname, 'dist');
 
 // Serve static assets
 app.use(express.static(DIST));
@@ -29,5 +27,5 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Pantry Pal web app running on port ${PORT}`);
+  console.log(`SmartPantry web app running on port ${PORT}`);
 });

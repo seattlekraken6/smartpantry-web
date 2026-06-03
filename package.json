@@ -1,1 +1,1 @@
-{"name":"pantry-pal-web","version":"1.0.0","scripts":{"start":"node serve-web.js"},"dependencies":{"express":"^4.18.2"}}
+{"name":"smartpantry-web","version":"1.0.0","scripts":{"start":"node serve-web.js"},"dependencies":{"express":"^4.18.2"}}
