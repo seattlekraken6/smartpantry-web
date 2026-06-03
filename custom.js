@@ -145,6 +145,7 @@ function applyThemeStyles(profile) {
   document.documentElement.style.setProperty('--accent', selectedTheme.accent);
   document.documentElement.style.setProperty('--accent-light', selectedTheme.accent + '22');
   document.documentElement.style.setProperty('--accent-glow', selectedTheme.accent + '33');
+  document.documentElement.style.setProperty('--pp-accent', selectedTheme.accent);
   document.documentElement.style.setProperty('--pp-primary', selectedTheme.accent);
   document.documentElement.style.setProperty('--pp-primary-dark', selectedTheme.accent);
   document.documentElement.style.setProperty('--pp-bg', selectedTheme.bg);
@@ -187,7 +188,7 @@ function openAccountOnboardingModal() {
     const slide = slides[step];
     openModal('Getting started', `
       <section class="onboarding-screen">
-        <div class="onboarding-screen-brand">Pantry Pal</div>
+        <div class="onboarding-screen-brand"><img class="pantry-pal-logo-mark" src="${PANTRY_PAL_LOGO_PATH}" alt="Pantry Pal" /> Pantry Pal</div>
         <div class="onboarding-screen-number">${slide.number}</div>
         <h3>${slide.title}</h3>
         <p>${slide.copy}</p>
@@ -265,15 +266,43 @@ function startApp() {
   document.body.classList.add('pantry-pal-ready');
   injectAvatars();
   injectAnalytics();
-  applyBrandingReplacements();
-  wireExportedHamburgerMenu();
-  createPantrySnapshotPanel();
-  createFloatingScannerPanel();
+  refreshPantryPalEnhancements();
   if (!window.pantryPalGlobalActionsBound) {
     document.addEventListener('click', handleGlobalActions, true);
     document.addEventListener('keydown', handleGlobalKeyActions, true);
+    window.addEventListener('popstate', schedulePantryPalEnhancements);
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+    history.pushState = function pantryPalPushState(...args) {
+      const result = originalPushState.apply(this, args);
+      schedulePantryPalEnhancements();
+      return result;
+    };
+    history.replaceState = function pantryPalReplaceState(...args) {
+      const result = originalReplaceState.apply(this, args);
+      schedulePantryPalEnhancements();
+      return result;
+    };
+    const root = document.getElementById('root');
+    if (root) {
+      window.pantryPalRootObserver = new MutationObserver(schedulePantryPalEnhancements);
+      window.pantryPalRootObserver.observe(root, { childList: true, subtree: true });
+    }
     window.pantryPalGlobalActionsBound = true;
   }
+}
+
+function refreshPantryPalEnhancements() {
+  applyBrandingReplacements();
+  injectLogoBranding();
+  wireExportedHamburgerMenu();
+  injectDashboardTools();
+  injectContextualTools();
+}
+
+function schedulePantryPalEnhancements() {
+  clearTimeout(window.pantryPalEnhancementTimer);
+  window.pantryPalEnhancementTimer = setTimeout(refreshPantryPalEnhancements, 120);
 }
 
 // Inject Analytics Dashboard
@@ -319,18 +348,59 @@ function injectAnalytics() {
   document.head.appendChild(script);
 }
 
+function injectLogoBranding() {
+  let icon = document.querySelector('link[rel="icon"]');
+  if (!icon) {
+    icon = document.createElement('link');
+    icon.rel = 'icon';
+    document.head.appendChild(icon);
+  }
+  icon.href = PANTRY_PAL_LOGO_PATH;
+  icon.type = 'image/png';
+
+  let appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
+  if (!appleIcon) {
+    appleIcon = document.createElement('link');
+    appleIcon.rel = 'apple-touch-icon';
+    document.head.appendChild(appleIcon);
+  }
+  appleIcon.href = PANTRY_PAL_LOGO_PATH;
+
+  const labels = Array.from(document.querySelectorAll('div[dir="auto"]'))
+    .filter(el => /Pantry\s*Pal|PantryPal|Dashboard|Settings|Inventory|Meal Planner|Grocery/i.test(el.textContent || ''));
+  labels.forEach(label => {
+    const row = label.closest('.r-18u37iz') || label.parentElement;
+    if (!row || row.querySelector('.pantry-pal-logo-mark')) return;
+    const iconCandidate = Array.from(row.querySelectorAll('div[dir="auto"]')).find(el => /^[\p{Emoji_Presentation}\p{Extended_Pictographic}🏠🗄️🍽️🛒⚙️]+$/u.test((el.textContent || '').trim()));
+    if (!iconCandidate) return;
+    iconCandidate.innerHTML = `<img class="pantry-pal-logo-mark" src="${PANTRY_PAL_LOGO_PATH}" alt="Pantry Pal" />`;
+  });
+}
+
 // Create Modal System
 function createModal() {
+  if (document.getElementById('global-modal-overlay')) return;
   const modalHTML = `
     <div class="custom-modal-overlay" id="global-modal-overlay">
       <div class="custom-modal" id="global-modal">
-        <button class="modal-close" onclick="closeModal()">×</button>
+        <button class="modal-close" type="button" aria-label="Close modal">×</button>
         <h2 id="modal-title" style="font-family: 'Outfit'; margin-top: 0;">Modal</h2>
         <div id="modal-content"></div>
       </div>
     </div>
   `;
   document.body.insertAdjacentHTML('beforeend', modalHTML);
+  const overlay = document.getElementById('global-modal-overlay');
+  overlay?.addEventListener('click', event => {
+    if (event.target === overlay || event.target.closest('.modal-close')) {
+      closeModal();
+    }
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && overlay?.classList.contains('active')) {
+      closeModal();
+    }
+  });
 }
 
 window.openModal = function(title, contentHTML) {
@@ -662,7 +732,7 @@ function startCameraPreview() {
 
 function openReceiptScannerModal() {
   openModal('Receipt Scanner', `
-    <p class="account-creation-copy">Upload a receipt image. Gemini will extract grocery line items, quantities, and categories.</p>
+    <p class="account-creation-copy">Upload a receipt image. OpenAI will extract grocery line items, quantities, and categories.</p>
     <input type="file" id="receipt-upload" accept="image/*" class="receipt-upload" />
     <img id="pp-receipt-img" alt="Receipt preview" />
     <div id="ocr-result" class="receipt-preview">Waiting for receipt upload...</div>
@@ -679,14 +749,14 @@ function openReceiptScannerModal() {
       img.src = imageDataUrl;
       img.style.display = 'block';
     }
-    if (result) result.innerHTML = '<div class="pp-thinking"><span class="pp-spinner"></span>Scanning receipt with Gemini...</div>';
+    if (result) result.innerHTML = '<div class="pp-thinking"><span class="pp-spinner"></span>Scanning receipt with OpenAI...</div>';
     scanImageForItems(imageDataUrl, 'receipt', 'receipt');
   });
 }
 
 function openImageUploadModal() {
   openModal('Add a pantry photo', `
-    <p class="account-creation-copy">Choose a kitchen or grocery photo. Gemini will identify visible pantry items for review.</p>
+    <p class="account-creation-copy">Choose a kitchen or grocery photo. OpenAI will identify visible pantry items for review.</p>
     <input type="file" id="image-upload" accept="image/*" class="receipt-upload" />
     <div id="pp-photo-preview-container"><img id="pp-photo-preview" alt="Pantry photo preview" /></div>
     <div id="image-upload-result" class="receipt-preview">Waiting for an image...</div>
@@ -705,7 +775,7 @@ function openImageUploadModal() {
       preview.src = imageDataUrl;
       previewContainer.style.display = 'block';
     }
-    result.innerHTML = '<div class="pp-thinking"><span class="pp-spinner"></span>Scanning photo with Gemini...</div>';
+    result.innerHTML = '<div class="pp-thinking"><span class="pp-spinner"></span>Scanning photo with OpenAI...</div>';
     scanImageForItems(imageDataUrl, 'photo', 'photo');
   });
 }
@@ -716,7 +786,7 @@ async function scanImageForItems(imageDataUrl, mode, sourceLabel) {
     const prompt = mode === 'receipt'
       ? 'Read this grocery receipt image. Extract only purchased food or household pantry items. Ignore totals, taxes, payment data, coupons, store names, addresses, and loyalty text. Estimate quantity and unit when visible.'
       : 'Identify visible grocery, pantry, fridge, or meal ingredients in this image. Return only items that a user could add to pantry inventory. Estimate quantity and category.';
-    const data = await callGeminiJSON({
+    const data = await callOpenAIJSON({
       prompt,
       imageDataUrl,
       schemaHint: 'Use {"items":[{"name":"string","quantity":number,"unit":"string","category":"produce|dairy|meat|grains|canned|spices|snacks|drinks|frozen|condiments|household","confidence":0.0}]}'
@@ -902,7 +972,7 @@ function renderPantrySnapshot() {
 
   panel.innerHTML = `
     <div class="pantry-snapshot-header">
-      <div>🗄️ Pantry snapshot</div>
+      <div>Pantry snapshot</div>
       <div class="pantry-snapshot-count">${count} items</div>
     </div>
     <ul class="pantry-snapshot-list">${itemsHtml}</ul>
@@ -915,14 +985,146 @@ function renderPantrySnapshot() {
   }
 }
 
-function createPantrySnapshotPanel() {
-  if (document.getElementById('pantry-snapshot-panel')) return;
+function injectDashboardTools() {
+  const isDashboard = /^\/(?:index(?:\.html)?)?$/i.test(window.location.pathname);
+  const existing = document.getElementById('pantry-dashboard-tools');
+  if (!isDashboard) {
+    existing?.remove();
+    return;
+  }
+  if (existing) {
+    renderPantrySnapshot();
+    wireToolButtons(existing);
+    return;
+  }
   ensurePantryInventory();
-  const panel = document.createElement('aside');
-  panel.id = 'pantry-snapshot-panel';
-  panel.className = 'pantry-snapshot-panel';
-  document.body.appendChild(panel);
+  const quickActionsHeader = Array.from(document.querySelectorAll('div[dir="auto"]')).find(el => el.textContent === 'Quick Actions');
+  const host = quickActionsHeader?.parentElement || document.querySelector('#root');
+  if (!host) return;
+  const section = document.createElement('section');
+  section.id = 'pantry-dashboard-tools';
+  section.className = 'pantry-dashboard-tools';
+  section.innerHTML = `
+    <div class="pantry-page-tools">
+      <button class="scanner-action-btn" type="button" data-tool-action="barcode">Scan barcode</button>
+      <button class="scanner-action-btn secondary" type="button" data-tool-action="receipt">Scan receipt</button>
+      <button class="scanner-action-btn secondary" type="button" data-tool-action="meal">Meal tracking</button>
+      <button class="scanner-action-btn secondary" type="button" data-tool-action="rule">Replenishment rule</button>
+    </div>
+    <div id="pantry-snapshot-panel" class="pantry-snapshot-panel"></div>
+  `;
+  host.insertBefore(section, quickActionsHeader || host.firstChild);
   renderPantrySnapshot();
+  wireToolButtons(section);
+}
+
+function injectContextualTools() {
+  const existing = document.getElementById('pantry-context-tools');
+  const path = window.location.pathname;
+  let title = '';
+  let actions = [];
+  if (/\/item\/add|\/inventory/i.test(path)) {
+    title = 'Add items';
+    actions = [
+      ['barcode', 'Scan barcode'],
+      ['receipt', 'Scan receipt'],
+      ['photo', 'Scan photo'],
+      ['voice', 'Voice input']
+    ];
+  } else if (/\/grocery|\/smart-cart/i.test(path)) {
+    title = 'Grocery tools';
+    actions = [
+      ['receipt', 'Scan receipt'],
+      ['rule', 'Replenishment rule'],
+      ['pantry', 'View pantry'],
+      ['barcode', 'Scan barcode']
+    ];
+  } else if (/\/meals|\/meal\//i.test(path)) {
+    title = 'Meal tools';
+    actions = [
+      ['meal', 'Meal tracking'],
+      ['voice', 'Voice input'],
+      ['pantry', 'View pantry'],
+      ['photo', 'Scan meal photo']
+    ];
+  } else if (/\/settings/i.test(path)) {
+    injectThemeSettingsPanel();
+    return;
+  } else {
+    existing?.remove();
+    return;
+  }
+
+  const contextKey = `${title}:${actions.map(([action]) => action).join(',')}`;
+  if (existing?.dataset.contextKey === contextKey) return;
+  existing?.remove();
+
+  const root = document.querySelector('#root');
+  if (!root) return;
+  const panel = document.createElement('section');
+  panel.id = 'pantry-context-tools';
+  panel.className = 'pantry-context-tools';
+  panel.dataset.contextKey = contextKey;
+  panel.innerHTML = `
+    <div class="pantry-context-title">${title}</div>
+    <div class="pantry-page-tools">
+      ${actions.map(([action, label]) => `<button class="scanner-action-btn ${action === actions[0][0] ? '' : 'secondary'}" type="button" data-tool-action="${action}">${label}</button>`).join('')}
+    </div>
+  `;
+  root.appendChild(panel);
+  wireToolButtons(panel);
+}
+
+function wireToolButtons(scope = document) {
+  scope.querySelectorAll('[data-tool-action]').forEach(button => {
+    if (button.dataset.toolWired === 'true') return;
+    button.dataset.toolWired = 'true';
+    button.addEventListener('click', () => {
+      const action = button.dataset.toolAction;
+      if (action === 'barcode') openBarcodeScannerModal();
+      if (action === 'receipt') openReceiptScannerModal();
+      if (action === 'photo') openImageUploadModal();
+      if (action === 'voice') openVoiceInputModal();
+      if (action === 'rule') openReplenishmentRuleModal();
+      if (action === 'meal') openMealTrackerModal();
+      if (action === 'pantry') openPantryModal();
+    });
+  });
+}
+
+function injectThemeSettingsPanel() {
+  const root = document.querySelector('#root');
+  if (!root) return;
+  const existing = document.getElementById('pantry-context-tools');
+  if (existing?.dataset.contextKey === 'settings:themes') return;
+  existing?.remove();
+  const profile = ensureUserProfile();
+  const panel = document.createElement('section');
+  panel.id = 'pantry-context-tools';
+  panel.className = 'pantry-context-tools';
+  panel.dataset.contextKey = 'settings:themes';
+  panel.innerHTML = `
+    <div class="pantry-context-title">Themes</div>
+    <div class="theme-grid">
+      ${PANTRY_PAL_THEMES.map(theme => `
+        <button class="theme-option ${theme.id === profile.themeId ? 'active' : ''}" type="button" data-theme-id="${theme.id}">
+          <span class="theme-swatch" style="background:${theme.gradient}"></span>
+          <span>${theme.name}</span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+  root.appendChild(panel);
+  panel.querySelectorAll('[data-theme-id]').forEach(button => {
+    button.addEventListener('click', () => {
+      const theme = PANTRY_PAL_THEMES.find(item => item.id === button.dataset.themeId);
+      if (!theme) return;
+      const updated = { ...ensureUserProfile(), theme: theme.name, themeId: theme.id, accent: theme.accent, gradient: theme.gradient };
+      localStorage.setItem('pantryPalProfile', JSON.stringify(updated));
+      applyThemeStyles(updated);
+      panel.querySelectorAll('.theme-option').forEach(option => option.classList.toggle('active', option.dataset.themeId === theme.id));
+    });
+  });
 }
 
 function openPantryModal() {
@@ -1221,7 +1423,7 @@ async function parseVoiceCommand(text) {
   const command = String(text || '').trim();
   if (!command) return null;
   try {
-    return await callGeminiJSON({
+    return await callOpenAIJSON({
       prompt: `Parse this pantry app voice command: "${command}". Supported intents: add_inventory, log_meal, add_replenishment_rule, generate_meal_plan. Extract item, meal, quantity, unit, threshold, and reorderQuantity where relevant.`,
       schemaHint: 'Use {"intent":"add_inventory|log_meal|add_replenishment_rule|generate_meal_plan","itemName":"string","mealName":"string","quantity":number,"unit":"string","threshold":number,"reorderQuantity":number}'
     });
@@ -1348,9 +1550,9 @@ function openMealTrackerModal() {
 
 async function logMealWithAI(mealName, mealType = 'Meal', servings = 1) {
   const status = document.getElementById('meal-ai-status') || document.getElementById('voice-status');
-  if (status) status.innerHTML = '<div class="pp-thinking"><span class="pp-spinner"></span>Estimating meal nutrition with Gemini...</div>';
+  if (status) status.innerHTML = '<div class="pp-thinking"><span class="pp-spinner"></span>Estimating meal nutrition with OpenAI...</div>';
   try {
-    const data = await callGeminiJSON({
+    const data = await callOpenAIJSON({
       prompt: `Estimate nutrition for this meal log. Meal: ${mealName}. Servings: ${servings}. Return practical estimates and short notes.`,
       schemaHint: 'Use {"name":"string","calories":number,"protein":number,"carbs":number,"fat":number,"notes":"string"}'
     });
@@ -1377,10 +1579,10 @@ async function logMealWithAI(mealName, mealType = 'Meal', servings = 1) {
 
 async function generateMealPlanWithAI() {
   const status = document.getElementById('meal-ai-status');
-  if (status) status.innerHTML = '<div class="pp-thinking"><span class="pp-spinner"></span>Generating a pantry-aware meal plan with Gemini...</div>';
+  if (status) status.innerHTML = '<div class="pp-thinking"><span class="pp-spinner"></span>Generating a pantry-aware meal plan with OpenAI...</div>';
   try {
     const inventory = getPantryInventory().slice(0, 40);
-    const data = await callGeminiJSON({
+    const data = await callOpenAIJSON({
       prompt: `Create a 7-day meal plan using this pantry inventory when possible: ${JSON.stringify(inventory)}. Include approachable meals and mention key pantry items used.`,
       schemaHint: 'Use {"meals":[{"day":"Monday","name":"string","mealType":"Dinner","usesInventory":"string","ingredients":["string"],"notes":"string"}]}'
     });
@@ -1390,30 +1592,6 @@ async function generateMealPlanWithAI() {
   } catch (error) {
     renderAiError(status || document.getElementById('modal-content'), error);
   }
-}
-
-function createFloatingScannerPanel() {
-  if (document.getElementById('floating-scanner-panel')) return;
-  const panel = document.createElement('div');
-  panel.id = 'floating-scanner-panel';
-  panel.innerHTML = `
-    <button class="scanner-action-btn" id="floating-barcode-btn" type="button">📷 Scan Barcode</button>
-    <button class="scanner-action-btn" id="floating-receipt-btn" type="button">🧾 Scan Receipt</button>
-    <button class="scanner-action-btn" id="floating-camera-btn" type="button">📸 Photo Scan</button>
-    <button class="scanner-action-btn" id="floating-voice-btn" type="button">🎙️ Voice Input</button>
-    <button class="scanner-action-btn secondary" id="floating-rule-btn" type="button">🔄 Rule</button>
-    <button class="scanner-action-btn secondary" id="floating-meal-btn" type="button">🍽️ Meal</button>
-    <button class="scanner-action-btn secondary" id="floating-pantry-btn" type="button">🗄️ Pantry</button>
-  `;
-  document.body.appendChild(panel);
-
-  document.getElementById('floating-barcode-btn').addEventListener('click', openBarcodeScannerModal);
-  document.getElementById('floating-receipt-btn').addEventListener('click', openReceiptScannerModal);
-  document.getElementById('floating-camera-btn').addEventListener('click', openCameraCaptureModal);
-  document.getElementById('floating-voice-btn').addEventListener('click', openVoiceInputModal);
-  document.getElementById('floating-rule-btn').addEventListener('click', () => openReplenishmentRuleModal());
-  document.getElementById('floating-meal-btn').addEventListener('click', openMealTrackerModal);
-  document.getElementById('floating-pantry-btn').addEventListener('click', openPantryModal);
 }
 
 function getActionText(target) {
@@ -1426,11 +1604,108 @@ function getActionText(target) {
   ).replace(/\s+/g, ' ').trim();
 }
 
+const PANTRY_ROUTE_MAP = {
+  '': '/',
+  '/': '/',
+  'index': '/',
+  'index.html': '/',
+  '/index': '/',
+  '/index.html': '/',
+  '(tabs)': '/',
+  '(tabs)/index': '/',
+  '(tabs)/inventory': '/inventory',
+  '(tabs)/grocery': '/grocery',
+  '(tabs)/meals': '/meals',
+  '(tabs)/settings': '/settings',
+  '(tabs)/designer': '/designer',
+  'inventory': '/inventory',
+  'inventory.html': '/inventory',
+  '/inventory': '/inventory',
+  '/inventory.html': '/inventory',
+  'grocery': '/grocery',
+  'grocery.html': '/grocery',
+  '/grocery': '/grocery',
+  '/grocery.html': '/grocery',
+  'meals': '/meals',
+  'meals.html': '/meals',
+  '/meals': '/meals',
+  '/meals.html': '/meals',
+  'settings': '/settings',
+  'settings.html': '/settings',
+  '/settings': '/settings',
+  '/settings.html': '/settings',
+  'designer': '/designer',
+  'designer.html': '/designer',
+  '/designer': '/designer',
+  '/designer.html': '/designer',
+  'smart-capture': '/smart-capture',
+  'smart-capture.html': '/smart-capture',
+  '/smart-capture': '/smart-capture',
+  '/smart-capture.html': '/smart-capture',
+  'smart-cart': '/smart-cart',
+  'smart-cart.html': '/smart-cart',
+  '/smart-cart': '/smart-cart',
+  '/smart-cart.html': '/smart-cart',
+  'forecasting': '/forecasting',
+  'forecasting.html': '/forecasting',
+  '/forecasting': '/forecasting',
+  '/forecasting.html': '/forecasting',
+  'inventory-history': '/inventory-history',
+  'inventory-history.html': '/inventory-history',
+  '/inventory-history': '/inventory-history',
+  '/inventory-history.html': '/inventory-history',
+  'community': '/community',
+  'community.html': '/community',
+  '/community': '/community',
+  '/community.html': '/community',
+  'profile': '/profile',
+  'profile.html': '/profile',
+  '/profile': '/profile',
+  '/profile.html': '/profile',
+  'privacy': '/privacy',
+  'privacy.html': '/privacy',
+  '/privacy': '/privacy',
+  '/privacy.html': '/privacy',
+  'subscription': '/subscription',
+  'subscription.html': '/subscription',
+  '/subscription': '/subscription',
+  '/subscription.html': '/subscription',
+  'auth/login': '/auth/login',
+  'auth/login.html': '/auth/login',
+  '/auth/login': '/auth/login',
+  '/auth/login.html': '/auth/login',
+  'item/add': '/item/add',
+  'item/add.html': '/item/add',
+  '/item/add': '/item/add',
+  '/item/add.html': '/item/add',
+  'recipe/add': '/recipe/add',
+  'recipe/add.html': '/recipe/add',
+  '/recipe/add': '/recipe/add',
+  '/recipe/add.html': '/recipe/add',
+  'grocery/orders': '/grocery/orders',
+  'grocery/orders.html': '/grocery/orders',
+  '/grocery/orders': '/grocery/orders',
+  '/grocery/orders.html': '/grocery/orders',
+  'grocery/checkout': '/grocery/checkout',
+  'grocery/checkout.html': '/grocery/checkout',
+  '/grocery/checkout': '/grocery/checkout',
+  '/grocery/checkout.html': '/grocery/checkout'
+};
+
+function normalizeRoute(path) {
+  const raw = String(path || '').replace(window.location.origin, '');
+  const clean = decodeURIComponent(raw).replace(/\/$/, '');
+  return PANTRY_ROUTE_MAP[clean] || PANTRY_ROUTE_MAP[clean.replace(/^\//, '')] || path;
+}
+
 function navigateTo(path) {
   if (!path) return;
-  window.location.href = path.startsWith('/') || /^https?:\/\//i.test(path)
-    ? path
-    : `/${path}`;
+  if (/^https?:\/\//i.test(path)) {
+    window.location.href = path;
+    return;
+  }
+  const normalized = normalizeRoute(path);
+  window.location.href = normalized.startsWith('/') ? normalized : `/${normalized}`;
 }
 
 function completeLocalAuth({ name, email, seenOnboarding = false }) {
@@ -1454,7 +1729,7 @@ function renderAuthScreen(mode = 'login') {
     <main class="auth-shell">
       <section class="auth-card">
         <button class="auth-close" type="button" data-auth-action="guest" aria-label="Browse without account">×</button>
-        <div class="auth-mark">PP</div>
+        <div class="auth-mark"><img src="${PANTRY_PAL_LOGO_PATH}" alt="Pantry Pal" /></div>
         <h1>${mode === 'signup' ? 'Create your pantry' : 'Welcome back'}</h1>
         <p>${mode === 'signup' ? 'Start with a clean pantry dashboard and add groceries when you are ready.' : 'Sign in locally to keep the prototype simple and usable.'}</p>
         <div class="auth-tabs" role="tablist">
@@ -1521,8 +1796,25 @@ function handleGlobalActions(event) {
     openMenuModal();
     return;
   }
+  const href = target.closest('a')?.getAttribute('href');
+  if (href) {
+    const normalizedHref = normalizeRoute(href);
+    if (normalizedHref !== href) {
+      event.preventDefault();
+      event.stopPropagation();
+      navigateTo(normalizedHref);
+      return;
+    }
+  }
   const text = getActionText(target);
   if (!text) return;
+
+  if (/^(🏠\s*)?(home|dashboard)$/i.test(text)) {
+    event.preventDefault();
+    event.stopPropagation();
+    navigateTo('index.html');
+    return;
+  }
 
   if (/\b(scan barcode)\b/i.test(text)) {
     event.preventDefault();
@@ -1678,13 +1970,6 @@ function handleGlobalActions(event) {
     event.preventDefault();
     event.stopPropagation();
     navigateTo('settings.html');
-    return;
-  }
-
-  if (/\b(gemini|ai setup|api key)\b/i.test(text)) {
-    event.preventDefault();
-    event.stopPropagation();
-    openGeminiSettingsModal();
     return;
   }
 
