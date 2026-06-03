@@ -367,7 +367,7 @@ function injectLogoBranding() {
   appleIcon.href = PANTRY_PAL_LOGO_PATH;
 
   const labels = Array.from(document.querySelectorAll('div[dir="auto"]'))
-    .filter(el => /Pantry\s*Pal|PantryPal|Dashboard|Settings|Inventory|Meal Planner|Grocery/i.test(el.textContent || ''));
+    .filter(el => /^(Pantry\s*Pal|PantryPal)$/i.test((el.textContent || '').trim()));
   labels.forEach(label => {
     const row = label.closest('.r-18u37iz') || label.parentElement;
     if (!row || row.querySelector('.pantry-pal-logo-mark')) return;

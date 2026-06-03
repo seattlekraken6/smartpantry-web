@@ -615,6 +615,16 @@ body > div:first-child { padding-top: 60px !important; padding-bottom: 80px !imp
   background: color-mix(in srgb, var(--pp-surface) 92%, transparent);
   box-shadow: 0 10px 30px rgba(0,0,0,0.12);
 }
+.pantry-context-tools {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 5200;
+  width: min(360px, calc(100vw - 32px));
+  margin: 0;
+  padding: 10px;
+  border-radius: 12px;
+}
 .pantry-dashboard-tools {
   display: grid;
   grid-template-columns: minmax(260px, 1fr) minmax(260px, 1fr);
@@ -627,9 +637,18 @@ body > div:first-child { padding-top: 60px !important; padding-bottom: 80px !imp
   align-content: start;
 }
 .pantry-context-title {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   color: var(--pp-text);
-  font: 800 16px 'Outfit', sans-serif;
+  font: 800 13px 'Outfit', sans-serif;
+}
+.pantry-context-tools .pantry-page-tools {
+  gap: 7px;
+}
+.pantry-context-tools .scanner-action-btn {
+  min-height: 34px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  font-size: 12px;
 }
 .pantry-snapshot-panel {
   width: 100%;
@@ -765,11 +784,18 @@ body > div:first-child { padding-top: 60px !important; padding-bottom: 80px !imp
   .pantry-dashboard-tools,
   .pantry-context-tools {
     width: calc(100vw - 20px);
-    margin: 12px auto;
+  }
+  .pantry-context-tools {
+    top: auto;
+    right: 10px;
+    bottom: 74px;
   }
   .pantry-dashboard-tools,
   .pantry-page-tools {
     grid-template-columns: 1fr;
+  }
+  .pantry-context-tools .pantry-page-tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .menu-tool-grid {
     grid-template-columns: 1fr;
